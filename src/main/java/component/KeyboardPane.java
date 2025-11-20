@@ -36,7 +36,7 @@ public class KeyboardPane extends VBox{
 			
 			hbox.setPrefWidth(512);
 			hbox.setAlignment(Pos.CENTER);
-
+			
 			for(String s: keyArray[i]) {
 				KeyButton kB = new KeyButton(s);
 				btnDict.put(s, kB);
@@ -44,8 +44,7 @@ public class KeyboardPane extends VBox{
 				/*
 				 * FILL CODE: Clicking this button should call a static method addLetterToCurrentPlayer(String s) from the class GameLogic.
 				 */
-                final String key = s;
-                kB.setOnAction(e -> GameLogic.addLetterToCurrentPlayer(key));
+                kB.setOnAction(e -> GameLogic.addLetterToCurrentPlayer(s));
 				
 				hbox.getChildren().add(kB);
 			}

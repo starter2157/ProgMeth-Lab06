@@ -13,7 +13,6 @@ import component.WordCanvas;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 
 public class GameLogic {
@@ -68,43 +67,68 @@ public class GameLogic {
 		 * The following code will make the timer starts counting down.
 		 * But it will not work if got called by the main application thread.
 		 */
-        Thread thread = new Thread(() -> {
+		Thread thread = new Thread(() -> {
             try {
-                runCountDownTimer(pl);
-            } catch (InterruptedException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
+            runCountDownTimer(pl);
+            }
+            catch (InterruptedException e1) {
+            // TODO Auto-generated catch block
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        e1.printStackTrace();
+                    }
+                });
             }
         });
-        thread.start();
+		thread.start();
 	}
 	
 	public static void runCountDownTimer(int pl) throws InterruptedException {
 		Timer plTimer = playerTimer[pl];
 		plTimer.setStop(false);
-		while(isTurnActive && !plTimer.isTimerEmpty()) {
-			Thread.sleep(20);
-			
-			/*
-			 * FIX CODE: The following code contains UI update, which can cause an error
-			 * if running in a different thread. You need to alter the code to make this works.
-			 */
-            Platform.runLater(() -> {
-                timerPane[pl].setTimer(plTimer);
-                plTimer.decrementTimer(2);
-            });
 
-		}
-		plTimer.setStop(true);
-		
-		if(plTimer.isTimerEmpty()) {
-			
-			/*
-			 * FIX CODE: The following code contains UI update, which can cause an error
-			 * if running in a different thread. You need to alter the code to make this works.
-			 */
-            Platform.runLater(() -> endGame());
-		}
+        Thread thread = new Thread ( () -> {
+            try {
+                while (isTurnActive && !plTimer.isTimerEmpty()) {
+                    Thread.sleep(20);
+
+                    /*
+                     * FIX CODE: The following code contains UI update, which can cause an error
+                     * if running in a different thread. You need to alter the code to make this works.
+                     */
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            timerPane[pl].setTimer(plTimer);
+                        }
+                    });
+
+                    plTimer.decrementTimer(2);
+                }
+                plTimer.setStop(true);
+
+                if (plTimer.isTimerEmpty()) {
+
+                    /*
+                     * FIX CODE: The following code contains UI update, which can cause an error
+                     * if running in a different thread. You need to alter the code to make this works.
+                     */
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            endGame();
+                        }
+                    });
+                }
+            }
+            catch (InterruptedException ie){
+                Thread.currentThread().interrupt();
+                plTimer.setStop(true);
+            }
+        });
+
+        thread.start();
 	}
 	
 	public static void endGame() {
@@ -113,21 +137,42 @@ public class GameLogic {
 		if(playerScore[currentPlayer]>0){
 			playerScore[currentPlayer] -= 1;
 		}
-		
-		//Update the final score
-		playerPane[0].setScore(playerScore[0]);
-		playerPane[1].setScore(playerScore[1]);
-		
-		String gameResult = "DRAW";
-		
-		if(playerScore[0]>playerScore[1]) {
-			gameResult = "PLAYER 1 WINS!";
-		}else if(playerScore[0]<playerScore[1]) {
-			gameResult = "PLAYER 2 WINS!";
-		}
-		
-		String dialogueString = "Game End!\nThe game result is: "+gameResult+"\n\nDo you want to restart?";
-		
+
+        Platform.runLater(() -> {
+            //Update the final score
+            playerPane[0].setScore(playerScore[0]);
+            playerPane[1].setScore(playerScore[1]);
+
+            String gameResult = "DRAW";
+
+            if (playerScore[0] > playerScore[1]) {
+                gameResult = "PLAYER 1 WINS!";
+            } else if (playerScore[0] < playerScore[1]) {
+                gameResult = "PLAYER 2 WINS!";
+            }
+
+            String dialogueString = "Game End!\nThe game result is: " + gameResult + "\n\nDo you want to restart?";
+
+            // Create the alert
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Congratulations");
+            alert.setHeaderText(null);
+            alert.setContentText(dialogueString);
+
+            // Add buttons manually if you prefer custom text
+            alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+
+            // Show dialog (blocking)
+            alert.showAndWait();
+
+            // Use getResult() directly
+            ButtonType result = alert.getResult();
+            if (result == ButtonType.YES) {
+                resetGame();
+            } else {
+                Platform.exit();
+            }
+        });
 		/*
 		 * FILL CODE
 		 * Create an Alert here, set all proper details and show it
@@ -138,19 +183,7 @@ public class GameLogic {
 		 * Hint: You can use alert.getResult() to check for the results
 		 */
 
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Congratulations");
-        alert.setHeaderText(null);
-        alert.setContentText(dialogueString);
-        ButtonType buttonYes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
-        ButtonType buttonNo = new ButtonType("No", ButtonBar.ButtonData.NO);
-        alert.getButtonTypes().setAll(buttonYes, buttonNo);
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == buttonYes) {
-            resetGame();
-        } else {
-            Platform.exit();
-        }
+		
 	}
 	//===========================================================================
 	
