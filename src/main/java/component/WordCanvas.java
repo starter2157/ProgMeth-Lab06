@@ -117,31 +117,30 @@ public class WordCanvas extends Canvas {
 		 * The following part of this code will freeze the program when run
 		 * Please turn this into a separate thread instead
 		 */
+
 		
 		LetterBox lb = letterBox[index];
-		
-		try {
-		for(double i=21;i>0;i--) {
-			letterScale[index] = i/20;
-			
-			updateCanvas(); //CAUTION: This method contains UI update, which can cause an error if running in a different thread
-			
-			Thread.sleep(16);
-		}
-		
-		lb.setStatus(newStatus);
-		
-		for(double i=0;i<21;i++) {
-			letterScale[index] = i/20;
-			
-			updateCanvas(); //CAUTION: This method contains UI update, which can cause an error if running in a different thread
-			
-			Thread.sleep(16);
-		}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
+        Thread thread = new Thread(() -> {
+
+            try {
+                    for(double i=21;i>0;i--) {
+                        letterScale[index] = i/20;
+                        Platform.runLater(() -> updateCanvas());
+                        Thread.sleep(16);
+                }
+
+                Platform.runLater(() -> lb.setStatus(newStatus));
+
+                for(double i=0;i<21;i++) {
+                    letterScale[index] = i/20;
+                    Platform.runLater(() -> updateCanvas());
+                    Thread.sleep(16);
+            }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
 	}
 	
 	public void flipWord(Status[] newStatus) {
@@ -150,20 +149,20 @@ public class WordCanvas extends Canvas {
 		 * The following part of this code will freeze the program when run
 		 * Please turn this into a separate thread instead
 		 */
-		
-		try {
-			for(int i=0;i<5;i++) {
-				flipLetter(i, newStatus[i]);
-					Thread.sleep(300);
-			}
-			Thread.sleep(1000);
-			GameLogic.endTurns(); //CAUTION: This method contains UI update, which can cause an error if running in a different thread
-			
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		
-		
+
+        Thread thread = new Thread(() -> {
+            try {
+                for (int i = 0; i < 5; i++) {
+                    flipLetter(i, newStatus[i]);
+                    Thread.sleep(300);
+                }
+                Thread.sleep(1000);
+                Platform.runLater(() -> GameLogic.endTurns());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
 	}
 	
 	public void addLetter(String letter) {

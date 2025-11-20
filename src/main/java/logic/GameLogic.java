@@ -1,6 +1,7 @@
 package logic;
 
 import java.util.Hashtable;
+import java.util.Optional;
 
 import component.KeyButton;
 import component.KeyboardPane;
@@ -12,6 +13,7 @@ import component.WordCanvas;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 
 public class GameLogic {
@@ -66,14 +68,15 @@ public class GameLogic {
 		 * The following code will make the timer starts counting down.
 		 * But it will not work if got called by the main application thread.
 		 */
-		
-		try {
-			runCountDownTimer(pl);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
+        Thread thread = new Thread(() -> {
+            try {
+                runCountDownTimer(pl);
+            } catch (InterruptedException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        });
+        thread.start();
 	}
 	
 	public static void runCountDownTimer(int pl) throws InterruptedException {
@@ -86,10 +89,11 @@ public class GameLogic {
 			 * FIX CODE: The following code contains UI update, which can cause an error
 			 * if running in a different thread. You need to alter the code to make this works.
 			 */
-			
-			timerPane[pl].setTimer(plTimer);			
-			
-			plTimer.decrementTimer(2);
+            Platform.runLater(() -> {
+                timerPane[pl].setTimer(plTimer);
+                plTimer.decrementTimer(2);
+            });
+
 		}
 		plTimer.setStop(true);
 		
@@ -99,8 +103,7 @@ public class GameLogic {
 			 * FIX CODE: The following code contains UI update, which can cause an error
 			 * if running in a different thread. You need to alter the code to make this works.
 			 */
-			
-			endGame();
+            Platform.runLater(() -> endGame());
 		}
 	}
 	
@@ -134,7 +137,20 @@ public class GameLogic {
 		 * 
 		 * Hint: You can use alert.getResult() to check for the results
 		 */
-		
+
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Congratulations");
+        alert.setHeaderText(null);
+        alert.setContentText(dialogueString);
+        ButtonType buttonYes = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+        ButtonType buttonNo = new ButtonType("No", ButtonBar.ButtonData.NO);
+        alert.getButtonTypes().setAll(buttonYes, buttonNo);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == buttonYes) {
+            resetGame();
+        } else {
+            Platform.exit();
+        }
 	}
 	//===========================================================================
 	

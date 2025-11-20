@@ -21,7 +21,7 @@ public class TimerPane extends VBox{
 	
 	public TimerPane(int pl) {
 		super();
-		
+		this.pl = pl;
 		this.setPrefWidth(192);
 		this.setPrefHeight(80);
 		this.setAlignment(Pos.CENTER);
@@ -45,9 +45,9 @@ public class TimerPane extends VBox{
 		/*
 		 * FILL CODE - Clicking button should calls the static method beginTurns(int pl) from GameLogic.
 		 */
-		
-		
-	}
+        button.setOnAction(e -> GameLogic.beginTurns(this.pl));
+
+    }
 	
 	public void setTimer(Timer t) {
 		timer.setText(t.toString());
